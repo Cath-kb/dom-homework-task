@@ -99,11 +99,14 @@ body {
     font-size: 30px;
 }
 
-button {
+button, .input-limit {
     position: absolute;
     width: 200px;
     left: 50%;
     transform: translateX(-50%);
+}
+
+button {
     color: #555;
     background: none;
     border: none;
@@ -136,6 +139,15 @@ i {
 .btn-new { top: 45px;}
 .btn-roll { top: 403px;}
 .btn-hold { top: 467px;}
+.input-limit { bottom: 40px;}
+
+.input-limit {
+    color: #555;
+    font-family: Lato;
+    font-size: 18px;
+    text-transform: uppercase;
+    font-weight: 300;
+}
 
 .dices {
     position: absolute;

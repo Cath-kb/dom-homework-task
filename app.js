@@ -10,11 +10,13 @@ GAME RULES:
 */
 
 const RESET_VALUE = 2;
+const LIMIT_DEFAULT = 100;
 
 let scores = [0, 0];
 let activePlayer = 0;
 let current = 0;
 const diceElements = document.querySelectorAll('.dice');
+const limitElement = document.querySelector('.input-limit');
 
 const initGame = () => {
   document.querySelector('#current-0').textContent = 0;
@@ -28,6 +30,7 @@ initGame();
 
 document.querySelector('.btn-roll').addEventListener('click', function() {
   const dices = []
+  const limit = parseInt(limitElement.value) || LIMIT_DEFAULT
 
   diceElements.forEach(diceElement => {
     let dice = Math.floor(Math.random() * 6) + 1;
@@ -44,7 +47,7 @@ document.querySelector('.btn-roll').addEventListener('click', function() {
   current = dices.reduce((sum, dice) => sum + dice, current);
   document.getElementById('current-'+activePlayer).textContent = current;
 
-  if (scores[activePlayer] + current >= 20) {
+  if (scores[activePlayer] + current >= limit) {
     alert(`Player ${activePlayer} won!!!`);
   }
 });
