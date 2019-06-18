@@ -9,7 +9,7 @@ GAME RULES:
 
 */
 
-const RESET_VALUE = 1;
+const RESET_VALUE = 2;
 
 let scores = [0, 0];
 let activePlayer = 0;
@@ -36,15 +36,16 @@ document.querySelector('.btn-roll').addEventListener('click', function() {
     diceElement.style.display = 'block';
   })
 
-  if (dices.includes(RESET_VALUE)) {
+  if (dices.includes(RESET_VALUE) || dices.every(el => el === dices[0])) {
     changePlayer();
-  } else {
-    current = dices.reduce((sum, dice) => sum + dice, current);
-    document.getElementById('current-'+activePlayer).textContent = current;
+    return;
+  }
 
-    if (scores[activePlayer] + current >= 20) {
-      alert(`Player ${activePlayer} won!!!`);
-    }
+  current = dices.reduce((sum, dice) => sum + dice, current);
+  document.getElementById('current-'+activePlayer).textContent = current;
+
+  if (scores[activePlayer] + current >= 20) {
+    alert(`Player ${activePlayer} won!!!`);
   }
 });
 
