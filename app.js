@@ -12,21 +12,67 @@ GAME RULES:
 const RESET_VALUE = 2;
 const LIMIT_DEFAULT = 100;
 
-let scores = [0, 0];
-let activePlayer = 0;
-let current = 0;
+const gamer = {
+  getScore: function () {
+    return this.score;
+  },
+  setScore: function (score) {
+    this.score = score;
+  },
+  resetScore: function () {
+    this.setScore(0);
+  },
+  getName: function () {
+    return this.name;
+  },
+  setName: function (name) {
+    this.name = name;
+  }
+}
+
+function Player(name) {
+  this.setName(name);
+  this.resetScore();
+}
+
+Player.prototype = gamer;
+
+let activePlayerIndex;
+let current;
+
 const diceElements = document.querySelectorAll('.dice');
 const limitElement = document.querySelector('.input-limit');
+const playerElements = document.querySelectorAll('.player-name');
+
+const currentPlayers = [new Player('Игрок 1'), new Player('Игрок 2')];
+
+const getActivePlayer = () => currentPlayers[activePlayerIndex];
 
 const initGame = () => {
-  document.querySelector('#current-0').textContent = 0;
-  document.querySelector('#current-1').textContent = 0;
-  document.querySelector('#score-0').textContent = 0;
-  document.querySelector('#score-1').textContent = 0;
+  activePlayerIndex = 0;
+  current = 0;
+
+  currentPlayers.forEach((player, index) => {
+    player.resetScore();
+    document.querySelector(`#score-${index}`).textContent = player.getScore();
+    document.querySelector(`#current-${index}`).textContent = '0';
+    document.querySelector(`.player-${index}-panel`).classList.remove('active');
+  })
+  document.querySelector(`.player-${activePlayerIndex}-panel`).classList.add('active');
+
   diceElements.forEach(el => el.style.display = 'none');
 }
 
-initGame();
+playerElements.forEach((player, index) => {
+  player.addEventListener('click', function (e) {
+    const currentName = currentPlayers[index].getName();
+    const name = prompt('Введите имя', currentName);
+    if (name) {
+      currentPlayers[index].setName(name);
+      e.target.innerText = name;
+    }
+  })
+});
 
 document.querySelector('.btn-roll').addEventListener('click', function() {
   const dices = []
@@ -45,29 +91,31 @@ document.querySelector('.btn-roll').addEventListener('click', function() {
   }
 
   current = dices.reduce((sum, dice) => sum + dice, current);
-  document.getElementById('current-'+activePlayer).textContent = current;
+  document.getElementById('current-'+activePlayerIndex).textContent = current;
 
-  if (scores[activePlayer] + current >= limit) {
-    alert(`Player ${activePlayer} won!!!`);
+  if (getActivePlayer().getScore() + current >= limit) {
+    setTimeout(() => alert(`${getActivePlayer().getName()} выиграл!!!`), 0);
   }
 });
 
 const changePlayer = () => {
   current = 0;
-  document.getElementById('current-'+activePlayer).textContent = 0;
-  document.querySelector(`.player-${activePlayer}-panel`).classList.toggle('active');
-  activePlayer = +!activePlayer;
+  document.getElementById('current-'+activePlayerIndex).textContent = '0';
+  document.querySelector(`.player-${activePlayerIndex}-panel`).classList.toggle('active');
+  activePlayerIndex = +!activePlayerIndex;
   diceElements.forEach(el => el.style.display = 'none');
-  document.querySelector(`.player-${activePlayer}-panel`).classList.toggle('active');
+  document.querySelector(`.player-${activePlayerIndex}-panel`).classList.toggle('active');
 }
 
 document.querySelector('.btn-hold').addEventListener('click', function() {
-  scores[activePlayer] += current;
-  document.querySelector(`#score-${activePlayer}`).textContent = scores[activePlayer];
+  const score = getActivePlayer().getScore() + current;
+  getActivePlayer().setScore(score);
+  document.querySelector(`#score-${activePlayerIndex}`).textContent = getActivePlayer().getScore();
   changePlayer();
 });
-
 
 document.querySelector('.btn-new').addEventListener('click', function() {
   initGame();
 });
+
+initGame();
