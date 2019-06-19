@@ -12,12 +12,46 @@ GAME RULES:
 const RESET_VALUE = 2;
 const LIMIT_DEFAULT = 100;
 
+const storage = {
+  data: {},
+  save: function (player) {
+    this.data[player.getName()] = player;
+    updateLocalStorage(player.getName(), player);
+  },
+  findByName: function (name) {
+    return this.data[name];
+  },
+  getAll: function () {
+    return Object.keys(this.data)
+      .reduce((players, key) => {
+        players.push(this.data[key]);
+        return players;
+      }, [])
+  }
+};
+
+if (!localStorage.getItem('storageData')) {
+  localStorage.setItem('storageData', JSON.stringify(storage.data));
+}
+
+function updateLocalStorage(key, data) {
+  const json = JSON.parse(localStorage.getItem('storageData'));
+  json[key] = data;
+  localStorage.setItem('storageData', JSON.stringify(json));
+}
+
 const gamer = {
   getScore: function () {
     return this.score;
   },
   setScore: function (score) {
     this.score = score;
+  },
+  win: function () {
+    this.wins++
+  },
+  getWins: function () {
+    return this.wins;
   },
   resetScore: function () {
     this.setScore(0);
@@ -30,12 +64,19 @@ const gamer = {
   }
 }
 
-function Player(name) {
+function Player(name, wins) {
+  this.wins = wins || 0;
   this.setName(name);
   this.resetScore();
 }
 
 Player.prototype = gamer;
+
+const json = JSON.parse(localStorage.getItem('storageData'));
+storage.data = Object.keys(json).reduce((players, key) => {
+  players[key] = new Player(json[key].name, json[key].wins)
+  return players
+}, {});
 
 let activePlayerIndex;
 let current;
@@ -43,6 +84,9 @@ let current;
 const diceElements = document.querySelectorAll('.dice');
 const limitElement = document.querySelector('.input-limit');
 const playerElements = document.querySelectorAll('.player-name');
+const resultElement = document.querySelector('.btn-results');
+const rollButton = document.querySelector('.btn-roll');
+const holdButton = document.querySelector('.btn-hold');
 
 const currentPlayers = [new Player('Игрок 1'), new Player('Игрок 2')];
 
@@ -61,15 +105,29 @@ const initGame = () => {
   document.querySelector(`.player-${activePlayerIndex}-panel`).classList.add('active');
 
   diceElements.forEach(el => el.style.display = 'none');
+  rollButton.disabled = false;
+  holdButton.disabled = false;
 }
 
 playerElements.forEach((player, index) => {
   player.addEventListener('click', function (e) {
     const currentName = currentPlayers[index].getName();
     const name = prompt('Введите имя', currentName);
-    if (name) {
-      currentPlayers[index].setName(name);
-      e.target.innerText = name;
+    if (name && name !== currentName) {
+      const storagePlayer = storage.findByName(name);
+      if (storagePlayer) {
+        const confirmLoad = confirm(`Загрузить ${name} с ${storagePlayer.getWins()} победами?`);
+        if (confirmLoad) {
+          currentPlayers[index] = storagePlayer;
+          e.target.innerText = name;
+        } else {
+          alert('Введите другое имя!');
+        }
+      } else {
+        currentPlayers[index] = new Player(name);
+        e.target.innerText = name;
+      }
+      initGame();
     }
   })
 });
@@ -94,7 +152,11 @@ document.querySelector('.btn-roll').addEventListener('click', function() {
   document.getElementById('current-'+activePlayerIndex).textContent = current;
 
   if (getActivePlayer().getScore() + current >= limit) {
+    getActivePlayer().win();
+    storage.save(getActivePlayer());
     setTimeout(() => alert(`${getActivePlayer().getName()} выиграл!!!`), 0);
+    rollButton.disabled = true;
+    holdButton.disabled = true;
   }
 });
 
@@ -116,6 +178,14 @@ document.querySelector('.btn-hold').addEventListener('click', function() {
 
 document.querySelector('.btn-new').addEventListener('click', function() {
   initGame();
+});
+
+resultElement.addEventListener('click', function() {
+  const results = storage.getAll().sort((a, b) => b.getWins() - a.getWins()).reduce((result, player) => {
+    return result + `\n${player.getName()}: ${player.getWins()}`
+  }, '');
+
+  alert('Результаты: ' + (results.length ? results : '\nПока турнирная таблица пуста!'));
 });
 
 initGame();
