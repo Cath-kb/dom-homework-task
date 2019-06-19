@@ -99,11 +99,14 @@ body {
     font-size: 30px;
 }
 
-button {
+button, .input-limit {
     position: absolute;
     width: 200px;
     left: 50%;
     transform: translateX(-50%);
+}
+
+button {
     color: #555;
     background: none;
     border: none;
@@ -115,8 +118,9 @@ button {
     transition: background-color 0.3s, color 0.3s;
 }
 
-button:hover { font-weight: 600; }
-button:hover i { margin-right: 20px; }
+button:hover:not(:disabled) { font-weight: 600; }
+button:hover:not(:disabled) i { margin-right: 20px; }
+button:disabled { opacity: .6; cursor: default; }
 
 button:focus {
     outline: none;
@@ -127,21 +131,34 @@ i {
     display: inline-block;
     margin-right: 15px;
     font-size: 32px;
-    line-height: 1;
-    vertical-align: text-top;
-    margin-top: -4px;
+    line-height: .8;
+    vertical-align: -.1em;
     transition: margin 0.3s;
 }
 
-.btn-new { top: 45px;}
+.btn-results { top: 25px;}
+.btn-new { top: 80px;}
 .btn-roll { top: 403px;}
 .btn-hold { top: 467px;}
+.input-limit { bottom: 40px;}
 
-.dice {
+.input-limit {
+    color: #555;
+    font-family: Lato;
+    font-size: 18px;
+    text-transform: uppercase;
+    font-weight: 300;
+}
+
+.dices {
     position: absolute;
     left: 50%;
-    top: 178px;
+    top: 120px;
     transform: translateX(-50%);
+}
+
+.dice {
+    margin: 20px;
     height: 100px;
     box-shadow: 0px 10px 60px rgba(0, 0, 0, 0.10);
 }
