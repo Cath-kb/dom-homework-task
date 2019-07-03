@@ -8,73 +8,11 @@ GAME RULES:
 - The first player to reach 100 points on GLOBAL score wins the game
 
 */
+import Player from './player.js';
+import storage from './storage.js';
 
 const RESET_VALUE = 2;
 const LIMIT_DEFAULT = 100;
-
-const storage = {
-  data: {},
-  save: function (player) {
-    this.data[player.getName()] = player;
-    this.update();
-  },
-  findByName: function (name) {
-    return this.data[name];
-  },
-  getAll: function () {
-    return Object.keys(this.data)
-      .reduce((players, key) => {
-        players.push(this.data[key]);
-        return players;
-      }, [])
-  },
-  init: function () {
-    if (!localStorage.getItem('storageData')) {
-      localStorage.setItem('storageData', JSON.stringify(this.data));
-    } else {
-      const storageData = JSON.parse(localStorage.getItem('storageData'));
-      this.data = Object.keys(storageData).reduce((players, key) => {
-        players[key] = new Player(storageData[key].name, storageData[key].wins)
-        return players
-      }, {});
-    }
-  },
-  update: function () {
-    localStorage.setItem('storageData', JSON.stringify(this.data));
-  }
-};
-
-const gamer = {
-  getScore: function () {
-    return this.score;
-  },
-  setScore: function (score) {
-    this.score = score;
-  },
-  win: function () {
-    this.wins++
-  },
-  getWins: function () {
-    return this.wins;
-  },
-  resetScore: function () {
-    this.setScore(0);
-  },
-  getName: function () {
-    return this.name;
-  },
-  setName: function (name) {
-    this.name = name;
-  }
-}
-
-function Player(name, wins) {
-  this.wins = wins || 0;
-  this.setName(name);
-  this.resetScore();
-}
-
-Player.prototype = gamer;
 
 let activePlayerIndex;
 let current;
