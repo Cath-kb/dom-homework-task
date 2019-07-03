@@ -2,8 +2,8 @@
 GAME RULES:
 
 - The game has 2 players, playing in rounds
-- In each turn, a player rolls a dice as many times as he wishes. Each result get added to his ROUND score
-- BUT, if the player rolls a 1, all his ROUND score gets lost. After that, it's the next player's turn
+- In each turn, a player rolls 2 dices as many times as he wishes. Each result get added to his ROUND score
+- BUT, if the player rolls a 2, all his ROUND score gets lost. After that, it's the next player's turn
 - The player can choose to 'Hold', which means that his ROUND score gets added to his GLOBAL score. After that, it's the next player's turn
 - The first player to reach 100 points on GLOBAL score wins the game
 
@@ -16,7 +16,7 @@ const storage = {
   data: {},
   save: function (player) {
     this.data[player.getName()] = player;
-    updateLocalStorage(player.getName(), player);
+    this.update();
   },
   findByName: function (name) {
     return this.data[name];
@@ -27,18 +27,22 @@ const storage = {
         players.push(this.data[key]);
         return players;
       }, [])
+  },
+  init: function () {
+    if (!localStorage.getItem('storageData')) {
+      localStorage.setItem('storageData', JSON.stringify(this.data));
+    } else {
+      const storageData = JSON.parse(localStorage.getItem('storageData'));
+      this.data = Object.keys(storageData).reduce((players, key) => {
+        players[key] = new Player(storageData[key].name, storageData[key].wins)
+        return players
+      }, {});
+    }
+  },
+  update: function () {
+    localStorage.setItem('storageData', JSON.stringify(this.data));
   }
 };
-
-if (!localStorage.getItem('storageData')) {
-  localStorage.setItem('storageData', JSON.stringify(storage.data));
-}
-
-function updateLocalStorage(key, data) {
-  const json = JSON.parse(localStorage.getItem('storageData'));
-  json[key] = data;
-  localStorage.setItem('storageData', JSON.stringify(json));
-}
 
 const gamer = {
   getScore: function () {
@@ -72,12 +76,6 @@ function Player(name, wins) {
 
 Player.prototype = gamer;
 
-const json = JSON.parse(localStorage.getItem('storageData'));
-storage.data = Object.keys(json).reduce((players, key) => {
-  players[key] = new Player(json[key].name, json[key].wins)
-  return players
-}, {});
-
 let activePlayerIndex;
 let current;
 
@@ -109,30 +107,37 @@ const initGame = () => {
   holdButton.disabled = false;
 }
 
-playerElements.forEach((player, index) => {
-  player.addEventListener('click', function (e) {
-    const currentName = currentPlayers[index].getName();
-    const name = prompt('Введите имя', currentName);
-    if (name && name !== currentName) {
-      const storagePlayer = storage.findByName(name);
-      if (storagePlayer) {
-        const confirmLoad = confirm(`Загрузить ${name} с ${storagePlayer.getWins()} победами?`);
-        if (confirmLoad) {
-          currentPlayers[index] = storagePlayer;
-          e.target.innerText = name;
-        } else {
-          alert('Введите другое имя!');
-        }
-      } else {
-        currentPlayers[index] = new Player(name);
-        e.target.innerText = name;
-      }
-      initGame();
-    }
-  })
-});
+const changePlayer = () => {
+  current = 0;
+  document.getElementById('current-'+activePlayerIndex).textContent = '0';
+  document.querySelector(`.player-${activePlayerIndex}-panel`).classList.toggle('active');
+  activePlayerIndex = +!activePlayerIndex;
+  diceElements.forEach(el => el.style.display = 'none');
+  document.querySelector(`.player-${activePlayerIndex}-panel`).classList.toggle('active');
+}
 
-document.querySelector('.btn-roll').addEventListener('click', function() {
+const onChangePlayerName = index => e => {
+  const currentName = currentPlayers[index].getName();
+  const name = prompt('Введите имя', currentName);
+  if (name && name !== currentName) {
+    const storagePlayer = storage.findByName(name);
+    if (storagePlayer) {
+      const confirmLoad = confirm(`Загрузить ${name} с ${storagePlayer.getWins()} победами?`);
+      if (confirmLoad) {
+        currentPlayers[index] = storagePlayer;
+        e.target.innerText = name;
+      } else {
+        alert('Введите другое имя!');
+      }
+    } else {
+      currentPlayers[index] = new Player(name);
+      e.target.innerText = name;
+    }
+    initGame();
+  }
+}
+
+const onRoll = () => {
   const dices = []
   const limit = parseInt(limitElement.value) || LIMIT_DEFAULT
 
@@ -158,34 +163,34 @@ document.querySelector('.btn-roll').addEventListener('click', function() {
     rollButton.disabled = true;
     holdButton.disabled = true;
   }
-});
-
-const changePlayer = () => {
-  current = 0;
-  document.getElementById('current-'+activePlayerIndex).textContent = '0';
-  document.querySelector(`.player-${activePlayerIndex}-panel`).classList.toggle('active');
-  activePlayerIndex = +!activePlayerIndex;
-  diceElements.forEach(el => el.style.display = 'none');
-  document.querySelector(`.player-${activePlayerIndex}-panel`).classList.toggle('active');
 }
 
-document.querySelector('.btn-hold').addEventListener('click', function() {
+const onHold = () => {
   const score = getActivePlayer().getScore() + current;
   getActivePlayer().setScore(score);
   document.querySelector(`#score-${activePlayerIndex}`).textContent = getActivePlayer().getScore();
   changePlayer();
-});
+}
 
-document.querySelector('.btn-new').addEventListener('click', function() {
-  initGame();
-});
-
-resultElement.addEventListener('click', function() {
+const showResults = () => {
   const results = storage.getAll().sort((a, b) => b.getWins() - a.getWins()).reduce((result, player) => {
     return result + `\n${player.getName()}: ${player.getWins()}`
   }, '');
 
   alert('Результаты: ' + (results.length ? results : '\nПока турнирная таблица пуста!'));
-});
+}
 
+const initListeners = () => {
+  playerElements.forEach((player, index) => {
+    player.addEventListener('click', onChangePlayerName(index))
+  });
+
+  document.querySelector('.btn-roll').addEventListener('click', onRoll);
+  document.querySelector('.btn-hold').addEventListener('click', onHold);
+  document.querySelector('.btn-new').addEventListener('click', initGame);
+  resultElement.addEventListener('click', showResults);
+}
+
+storage.init();
+initListeners();
 initGame();
