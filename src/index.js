@@ -8,8 +8,19 @@ GAME RULES:
 - The first player to reach 100 points on GLOBAL score wins the game
 
 */
-import Player from './player.js';
-import storage from './storage.js';
+import "@babel/polyfill";
+import Player from './player';
+import storage from './storage';
+import '../style.css';
+
+import dice1 from '../dice-1.png';
+import dice2 from '../dice-2.png';
+import dice3 from '../dice-3.png';
+import dice4 from '../dice-4.png';
+import dice5 from '../dice-5.png';
+import dice6 from '../dice-6.png';
+
+const diceImages = [dice1, dice2, dice3, dice4, dice5, dice6];
 
 const RESET_VALUE = 2;
 const LIMIT_DEFAULT = 100;
@@ -82,7 +93,7 @@ const onRoll = () => {
   diceElements.forEach(diceElement => {
     let dice = Math.floor(Math.random() * 6) + 1;
     dices.push(dice)
-    diceElement.src = `dice-${dice}.png`;
+    diceElement.src = diceImages[dice-1];
     diceElement.style.display = 'block';
   })
 
